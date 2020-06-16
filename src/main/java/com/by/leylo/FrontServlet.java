@@ -1,7 +1,11 @@
 package com.by.leylo;
 
 import org.apache.log4j.Logger;
+import com.twilio.Twilio;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -10,11 +14,18 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @WebServlet("/pathToThisServlet")
-public class Servlet extends HttpServlet {
+public class FrontServlet extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(Servlet.class);
-
     private static final int FACTOR = 4;
+
+    // Find your Account Sid and Auth Token at twilio.com/user/account
+    public static final String ACCOUNT_SID = "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+    public static final String AUTH_TOKEN = "your_auth_token";
+    private static final String FROM_NUMBER = "+15017250604"; // example
+    static {
+        Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
+    }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         LOGGER.info("Servlet#doPost() called");
@@ -22,30 +33,27 @@ public class Servlet extends HttpServlet {
         LOGGER.info("strategy is : " + strategy);
         if (strategy.equals("postMultiply")) {
             multiplyPost(request, response);
-        } else if (strategy.equals("sendEmail")) {
-            sendEmail(request, response);
+        } else if (strategy.equals("sendSMS")) {
+            sendSMS(request, response);
         }
     }
 
-    private void sendEmail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        final String email = request.getParameter("email");
-        final String subject = request.getParameter("subject");
+    private void sendSMS(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        boolean isSuccessfullySent = false;
+        final String toPhoneNumber = request.getParameter("toPhoneNumber");
         final String text = request.getParameter("text");
-        LOGGER.info("Sender: [" + email + "], subject: [" + subject + "], text: [" + text + "].");
-
-        boolean isSuccessfullySent = sendEmail(email, subject, text);
-
-        request.setAttribute("isEmailSend", isSuccessfullySent);
+        LOGGER.info("Phone number: [" + toPhoneNumber + "], text: [" + text + "].");
+        try {
+            final Message message = Message
+                    .creator(new PhoneNumber("+" + toPhoneNumber), new PhoneNumber(FROM_NUMBER), text)
+                    .create();
+            LOGGER.info(message.getSid());
+            isSuccessfullySent = message.getStatus().equals(Message.Status.SENT);
+        } catch (Exception e) {
+            LOGGER.info("Exception while sending SMS, " + e.toString());
+        }
+        request.setAttribute("isSent", isSuccessfullySent);
         request.getRequestDispatcher("index.jsp").forward(request, response);
-    }
-
-    private boolean sendEmail(String email, String subject, String text) {
-        boolean isSent = true;
-        // stub
-        // write the email processor service to process emails
-
-        // now we act like every time we successfully send emails
-        return isSent;
     }
 
     private void multiplyPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

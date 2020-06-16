@@ -28,21 +28,18 @@
   <hr/>
   <br/>
   <br/>
-  <h3>Email form</h3>
+  <h3>SMS form</h3>
   <form method="post" action="pathToThisServlet" >
-    <input hidden type="text" name="strategy" value="sendEmail"/>
+    <input hidden type="text" name="strategy" value="sendSMS"/>
     <label>
-      Send to: <input type="email" name="email" value="" required style="margin: 5px"/> <br/>
-    </label>
-    <label>
-      Subject: <input type="text" name="subject" value="" required style="margin: 5px"/><br/>
+      Send to: <input type="tel" pattern="[0-9]{12}" title="12 digits"name="toPhoneNumber" value="" required style="margin: 5px"/> <br/>
     </label>
     <label>
       Text: <br/> <textarea name="text" style="height: 100px; width: 220px; margin: 5px" required></textarea><br/>
     </label>
 
-    <p><%=(request.getAttribute("isEmailSend") == null) ? "" :
-            ((Boolean) request.getAttribute("isEmailSend")) ? "Email is sent" : "Email was not sent"%></p>
+    <p><%=(request.getAttribute("isSent") == null) ? "" :
+            ((Boolean) request.getAttribute("isSent")) ? "SMS was sent" : "SMS was not sent"%></p>
 
     <button type="submit" >Send Email</button>
   </form>
